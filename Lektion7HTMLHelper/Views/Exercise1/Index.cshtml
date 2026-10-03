@@ -1,0 +1,16 @@
+@using Microsoft.AspNetCore.Mvc.Rendering
+@model List<SelectListItem>
+
+@{
+    ViewData["Title"] = "Exercise 1";
+}
+
+<div class="container mt-4">
+    <h2>Exercise 1: Country Dropdown</h2>
+    <p>Select a country from the dropdown menu below:</p>
+
+    <div class="form-group mb-3 col-md-6">
+        <label for="countryDropdown" class="form-label">Country:</label>
+        @Html.DropDownList("SelectedCountry", Model, "-- Select a country --", new { @class = "form-select", id = "countryDropdown" })
+    </div>
+</div>
