@@ -95,3 +95,4 @@
 /Users/simonvallentinhoe/RiderProjects/Lektion7HTMLHelper/Lektion7HTMLHelper/obj/Debug/net10.0/Lektion7HTMLHelper.pdb
 /Users/simonvallentinhoe/RiderProjects/Lektion7HTMLHelper/Lektion7HTMLHelper/obj/Debug/net10.0/Lektion7HTMLHelper.genruntimeconfig.cache
 /Users/simonvallentinhoe/RiderProjects/Lektion7HTMLHelper/Lektion7HTMLHelper/obj/Debug/net10.0/ref/Lektion7HTMLHelper.dll
+/Users/simonvallentinhoe/RiderProjects/Lektion7HTMLHelper/Lektion7HTMLHelper/obj/Debug/net10.0/Lektion7HTMLHelper.sourcelink.json

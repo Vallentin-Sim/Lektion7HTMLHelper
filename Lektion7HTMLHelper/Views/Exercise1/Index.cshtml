@@ -1,16 +1,137 @@
-@using Microsoft.AspNetCore.Mvc.Rendering
-@model List<SelectListItem>
+@using Lektion7HTMLHelper.Models
+@model List<CountryItem>
 
 @{
     ViewData["Title"] = "Exercise 1";
 }
 
 <div class="container mt-4">
-    <h2>Exercise 1: Country Dropdown</h2>
-    <p>Select a country from the dropdown menu below:</p>
+    <h2>Exercise 1: Country & Language Showcase</h2>
+    <p class="text-muted">Select a country to inspect its code, experience a live language sample, and dynamically fetch its capital city information and image via the Wikipedia API.</p>
 
     <div class="form-group mb-3 col-md-6">
         <label for="countryDropdown" class="form-label">Country:</label>
-        @Html.DropDownList("SelectedCountry", Model, "-- Select a country --", new { @class = "form-select", id = "countryDropdown" })
+        @Html.DropDownList(
+            "SelectedCountry",
+            Model.OrderBy(c => c.Name).Select(c => new SelectListItem { Text = c.Name, Value = c.Code }),
+            "-- Select a country --",
+            new { @class = "form-select", id = "countryDropdown" }
+        )
+    </div>
+
+    <div class="form-group mb-3 col-md-6">
+        <button id="btnShowInfo" type="button" class="btn btn-primary">Show Country Info</button>
+    </div>
+
+    <div class="form-group mb-3 col-md-6">
+        <label for="countryCodeInput" class="form-label">Country Code:</label>
+        @Html.TextBox("CountryCode", null, new { @class = "form-control", id = "countryCodeInput", @readonly = "readonly", placeholder = "Country code will appear here" })
+    </div>
+
+    <div class="form-group mb-3 col-md-6">
+        <label for="sentenceInput" class="form-label">Language Sample:</label>
+        @Html.TextArea("LanguageSentence", null, 3, 50, new { @class = "form-control", id = "sentenceInput", @readonly = "readonly", placeholder = "Language sample will be typed here..." })
+    </div>
+
+    <div class="form-group mb-3 col-md-6">
+        <label class="form-label">Capital City:</label>
+        <div id="capitalLoading" class="text-muted small d-none mb-2">
+            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            Fetching capital info and imagery...
+        </div>
+        <div id="capitalCard" class="card shadow-sm d-none">
+            <img id="capitalImage" class="card-img-top d-none" alt="Capital city view" style="max-height: 280px; object-fit: cover;" />
+            <div class="card-body">
+                <h5 id="capitalTitle" class="card-title fw-bold"></h5>
+                <p id="capitalDescription" class="card-text text-muted small mb-0"></p>
+            </div>
+        </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        const countryData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+            Model.ToDictionary(c => c.Code, c => new { c.Capital, c.Sentence })
+        ));
+
+        let typingInterval = null;
+
+        function typeOutText(targetElement, text) {
+            clearInterval(typingInterval);
+            targetElement.value = "";
+            if (!text) return;
+
+            let index = 0;
+            typingInterval = setInterval(() => {
+                if (index < text.length) {
+                    targetElement.value += text[index];
+                    index++;
+                } else {
+                    clearInterval(typingInterval);
+                }
+            }, 30);
+        }
+
+        async function fetchCapitalInfo(capitalName) {
+            const capitalCard = document.getElementById("capitalCard");
+            const capitalLoading = document.getElementById("capitalLoading");
+            const capitalImage = document.getElementById("capitalImage");
+            const capitalTitle = document.getElementById("capitalTitle");
+            const capitalDesc = document.getElementById("capitalDescription");
+
+            if (!capitalName) {
+                capitalCard.classList.add("d-none");
+                capitalLoading.classList.add("d-none");
+                return;
+            }
+
+            capitalLoading.classList.remove("d-none");
+            capitalCard.classList.add("d-none");
+
+            try {
+                const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(capitalName)}`);
+                if (!response.ok) throw new Error("Network response was not ok");
+                
+                const data = await response.json();
+
+                capitalTitle.textContent = data.title || capitalName;
+                capitalDesc.textContent = data.extract || "No description available.";
+
+                const imageUrl = (data.thumbnail && data.thumbnail.source) 
+                              || (data.originalimage && data.originalimage.source);
+
+                if (imageUrl) {
+                    capitalImage.src = imageUrl;
+                    capitalImage.classList.remove("d-none");
+                } else {
+                    capitalImage.classList.add("d-none");
+                }
+
+                capitalLoading.classList.add("d-none");
+                capitalCard.classList.remove("d-none");
+            } catch (err) {
+                capitalLoading.classList.add("d-none");
+                capitalTitle.textContent = capitalName;
+                capitalDesc.textContent = "Unable to fetch capital details from the Wikipedia API.";
+                capitalImage.classList.add("d-none");
+                capitalCard.classList.remove("d-none");
+            }
+        }
+
+        document.getElementById("btnShowInfo").addEventListener("click", function () {
+            const dropdown = document.getElementById("countryDropdown");
+            const codeBox = document.getElementById("countryCodeInput");
+            const sentenceBox = document.getElementById("sentenceInput");
+            
+            const code = dropdown.value;
+            const item = countryData[code] || {};
+            const sentence = item.Sentence || "";
+            const capital = item.Capital || "";
+
+            codeBox.value = code ? code : "";
+            typeOutText(sentenceBox, sentence);
+            fetchCapitalInfo(capital);
+        });
+    </script>
+}
