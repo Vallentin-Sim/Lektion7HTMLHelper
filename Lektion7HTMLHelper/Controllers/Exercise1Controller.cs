@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Lektion7HTMLHelper.Models;
 
@@ -5,7 +6,7 @@ namespace Lektion7HTMLHelper.Controllers;
 
 public class Exercise1Controller : Controller
 {
-    private readonly List<CountryItem> _countries;
+    private List<CountryItem> _countries;
 
     public Exercise1Controller()
     {
@@ -31,8 +32,30 @@ public class Exercise1Controller : Controller
         };
     }
 
-    public IActionResult Index()
+    [HttpGet]
+    public IActionResult Index(string? selectedCountry)
     {
+        ViewBag.CountryCode = selectedCountry;
+        string? countriesJson = HttpContext.Session.GetString("Countries");
+        if (countriesJson != null)
+        {
+            _countries = JsonSerializer.Deserialize<List<CountryItem>>(countriesJson);
+        }
         return View(_countries);
+    }
+    
+    [HttpPost]
+    public IActionResult Index(IFormCollection formData)
+    {
+        string countryName = formData["CountryName"].ToString();
+        string countryCode = formData["CountryCode"].ToString().Trim().ToUpperInvariant();
+        CountryItem newCountry = new CountryItem { Name = countryName, Code = countryCode };
+        if (!_countries.Any(c => c.Code == countryCode))
+        {
+            _countries.Add(newCountry);
+            string countriesJson = JsonSerializer.Serialize(_countries);
+            HttpContext.Session.SetString("Countries", countriesJson);
+        }
+        return RedirectToAction("Index", new { selectedCountry = countryCode });
     }
 }
