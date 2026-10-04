@@ -25,7 +25,7 @@
                 new { @class = "form-select", id = "countryDropdown" }
             )
 
-            <button type="submit">
+            <button type="submit" id="btnShowInfo">
                 Show country code
             </button>
         }
@@ -105,6 +105,26 @@
             }, 30);
         }
 
+        async function fetchCapitalFromCountryCode(countryCode) {
+            try {
+                const response = await fetch(
+                    `https://restcountries.com/v3.1/alpha/${encodeURIComponent(countryCode)}`
+                );
+
+                if (!response.ok) {
+                    throw new Error("Could not find country");
+                }
+
+                const data = await response.json();
+
+                return data[0]?.capital?.[0] ?? null;
+            }
+            catch (error) {
+                console.error("Error fetching capital:", error);
+                return null;
+            }
+        }
+        
         async function fetchCapitalInfo(capitalName) {
             const capitalCard = document.getElementById("capitalCard");
             const capitalLoading = document.getElementById("capitalLoading");
@@ -151,19 +171,24 @@
             }
         }
 
-        document.getElementById("btnShowInfo").addEventListener("click", function () {
+        async function loadCountryInfo() {
             const dropdown = document.getElementById("countryDropdown");
-            const codeBox = document.getElementById("countryCodeInput");
             const sentenceBox = document.getElementById("sentenceInput");
-            
+
             const code = dropdown.value;
             const item = countryData[code] || {};
-            const sentence = item.Sentence || "";
-            const capital = item.Capital || "";
 
-            codeBox.value = code ? code : "";
+            let capital = item.Capital || "";
+            const sentence = item.Sentence || "";
+
+            if (!capital && code) {
+                capital = await fetchCapitalFromCountryCode(code);
+            }
+
             typeOutText(sentenceBox, sentence);
             fetchCapitalInfo(capital);
-        });
+        }
+
+        loadCountryInfo();
     </script>
 }
