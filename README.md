@@ -1,4 +1,4 @@
-# Lesson 11 – ASP.NET Core MVC Helper Methods
+# Lesson 7 – ASP.NET Core MVC Helper Methods
 
 This project contains exercises focused on working with **ASP.NET Core MVC**, with particular focus on HTML Helper methods, forms, HTTP GET/POST requests, strongly typed models, and session state.
 
